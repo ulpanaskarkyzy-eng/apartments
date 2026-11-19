@@ -1,6 +1,8 @@
 import csv
 import json
 import math
+import zipfile
+import xml.etree.ElementTree as ET
 from pathlib import Path
 from collections import Counter
 
@@ -13,13 +15,69 @@ DISTRICTS = [
 ]
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+RAW_A_FILE = BASE_DIR / "data" / "raw" / "listings_A.csv"
 RAW_FILES = [
-    BASE_DIR / "data" / "raw" / "listings_A.csv",
+    RAW_A_FILE,
     BASE_DIR / "data" / "raw" / "listings_B.csv",
 ]
 OUTPUT_FILE = BASE_DIR / "data" / "listings.json"
 
 REQUIRED_COLS = ["district", "price", "area", "rooms", "floor", "url"]
+
+
+def sync_xlsx_to_csv() -> None:
+    """Если в корне проекта лежит .xlsx файл, переносит все его листы в listings_A.csv."""
+    xlsx_files = sorted(
+        p for p in BASE_DIR.glob("*.xlsx") if not p.name.startswith("~$")
+    )
+    if not xlsx_files:
+        return
+
+    latest_xlsx = max(xlsx_files, key=lambda p: p.stat().st_mtime)
+    ns = "{http://schemas.openxmlformats.org/spreadsheetml/2006/main}"
+    rows = []
+
+    with zipfile.ZipFile(latest_xlsx) as z:
+        shared = []
+        if "xl/sharedStrings.xml" in z.namelist():
+            root = ET.fromstring(z.read("xl/sharedStrings.xml"))
+            for si in root:
+                shared.append("".join(t.text or "" for t in si.iter(ns + "t")))
+
+        sheets = sorted(
+            n for n in z.namelist()
+            if n.startswith("xl/worksheets/sheet") and n.endswith(".xml")
+        )
+        for sh in sheets:
+            root = ET.fromstring(z.read(sh))
+            for r in root.iter(ns + "row"):
+                vals = {}
+                for c in r:
+                    ref = c.attrib.get("r", "")
+                    col = "".join(ch for ch in ref if ch.isalpha())
+                    idx = sum((ord(ch) - 64) * (26 ** k) for k, ch in enumerate(reversed(col))) - 1
+                    t = c.attrib.get("t", "")
+                    v_el = c.find(ns + "v")
+                    val = ""
+                    if t == "inlineStr":
+                        val = "".join(x.text or "" for x in c.iter(ns + "t"))
+                    elif v_el is not None and v_el.text is not None:
+                        val = shared[int(v_el.text)] if t == "s" else v_el.text
+                    vals[idx] = val.strip()
+
+                if vals:
+                    row = [vals.get(i, "") for i in range(6)]
+                    if not any(row) or row[0].lower() == "district":
+                        continue
+                    rows.append(row)
+
+    RAW_A_FILE.parent.mkdir(parents=True, exist_ok=True)
+    with open(RAW_A_FILE, mode="w", encoding="utf-8", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(REQUIRED_COLS)
+        writer.writerows(rows)
+
+    print(f"[EXCEL -> CSV] Из '{latest_xlsx.name}' загружено строк в {RAW_A_FILE.name}: {len(rows)}")
 
 
 def normalize_url(url: str) -> str:
@@ -34,6 +92,8 @@ def median(values: list[float]) -> float:
 
 
 def main() -> None:
+    sync_xlsx_to_csv()
+
     raw_rows = []
     for path in RAW_FILES:
         if not path.exists():
