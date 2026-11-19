@@ -9,7 +9,7 @@ LISTINGS_FILE = BASE_DIR / "data" / "listings.json"
 SAMPLE_FILE = BASE_DIR / "data" / "listings_sample.json"
 EXPECTED_FILE = BASE_DIR / "data" / "expected_stats.json"
 
-COV_FEATURES = ["price_per_m2", "area", "rooms", "floor", "year"]
+COV_FEATURES = ["price_per_m2", "area", "rooms", "floor"]
 
 
 def mean(x: list[float]) -> float:
@@ -209,14 +209,14 @@ def verify_reference_example() -> None:
 def summarize_subset(items: list[dict]) -> dict:
     ppm2 = [x["price_per_m2"] for x in items]
     area = [x["area"] for x in items]
-    year = [x["year"] for x in items]
+    floor = [x["floor"] for x in items]
     return {
         "n": len(items),
         "mean_price_per_m2": mean(ppm2),
         "variance_price_per_m2": variance(ppm2),
         "std_price_per_m2": std(ppm2),
         "pearson_price_area": pearson(ppm2, area),
-        "pearson_price_year": pearson(ppm2, year),
+        "pearson_price_floor": pearson(ppm2, floor),
         "ci95_mean_price_per_m2": ci_mean(ppm2, 0.95),
         "lognorm_mom": lognorm_mom(ppm2),
         "lognorm_mle": lognorm_mle(ppm2),

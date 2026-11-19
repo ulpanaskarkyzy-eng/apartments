@@ -19,7 +19,7 @@ RAW_FILES = [
 ]
 OUTPUT_FILE = BASE_DIR / "data" / "listings.json"
 
-REQUIRED_COLS = ["district", "price", "area", "rooms", "floor", "year", "url"]
+REQUIRED_COLS = ["district", "price", "area", "rooms", "floor", "url"]
 
 
 def normalize_url(url: str) -> str:
@@ -81,13 +81,12 @@ def main() -> None:
             area = round(float(row["area"].replace(",", ".")), 2)
             rooms = int(float(row["rooms"]))
             floor = int(float(row["floor"]))
-            year = int(float(row["year"]))
         except ValueError as e:
             skipped_invalid += 1
             print(f"  [Ошибка числа] {fname}:{row_num} -> {e}")
             continue
 
-        if price <= 0 or area <= 0 or rooms <= 0 or floor <= 0 or year < 1900:
+        if price <= 0 or area <= 0 or rooms <= 0 or floor <= 0:
             skipped_invalid += 1
             print(f"  [Некорректное значение] {fname}:{row_num}")
             continue
@@ -100,7 +99,6 @@ def main() -> None:
             "area": area,
             "rooms": rooms,
             "floor": floor,
-            "year": year,
             "price_per_m2": round(ppm2, 2),
             "log_price_per_m2": round(math.log(ppm2), 6),
             "url": url_raw,
