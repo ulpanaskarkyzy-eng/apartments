@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "is_sample": true,
+  "districts": [
+    "Бостандыкский",
+    "Медеуский",
+    "Алмалинский",
+    "Ауэзовский",
+    "Наурызбайский"
+  ],
+  "listings": [
+    {"id": 1, "district": "Бостандыкский", "price": 75000000, "area": 79.5, "rooms": 3, "floor": 3, "year": 1991, "price_per_m2": 943396.23, "log_price_per_m2": 13.757242, "url": "https://krisha.kz/a/show/690000137"},
+    {"id": 2, "district": "Бостандыкский", "price": 101000000, "area": 97.0, "rooms": 3, "floor": 1, "year": 1986, "price_per_m2": 1041237.11, "log_price_per_m2": 13.85592, "url": "https://krisha.kz/a/show/690000274"},
+    {"id": 3, "district": "Бостандыкский", "price": 29000000, "area": 32.7, "rooms": 1, "floor": 4, "year": 2019, "price_per_m2": 886850.15, "log_price_per_m2": 13.695431, "url": "https://krisha.kz/a/show/690000411"},
+    {"id": 4, "district": "Бостандыкский", "price": 63000000, "area": 57.5, "rooms": 2, "floor": 1, "year": 1995, "price_per_m2": 1095652.17, "log_price_per_m2": 13.90686, "url": "https://krisha.kz/a/show/690000548"},
+    {"id": 5, "district": "Бостандыкский", "price": 80500000, "area": 85.6, "rooms": 3, "floor": 13, "year": 2006, "price_per_m2": 940420.56, "log_price_per_m2": 13.754082, "url": "https://krisha.kz/a/show/690000685"},
+    {"id": 6, "district": "Бостандыкский", "price": 31500000, "area": 28.6, "rooms": 1, "floor": 10, "year": 2001, "price_per_m2": 1101398.6, "log_price_per_m2": 13.912091, "url": "https://krisha.kz/a/show/690000822"},
+    {"id": 7, "district": "Медеуский", "price": 97000000, "area": 98.0, "rooms": 4, "floor": 7, "year": 1990, "price_per_m2": 989795.92, "log_price_per_m2": 13.805254, "url": "https://krisha.kz/a/show/690000959"},
+    {"id": 8, "district": "Медеуский", "price": 102500000, "area": 84.2, "rooms": 3, "floor": 6, "year": 2021, "price_per_m2": 1217339.67, "log_price_per_m2": 14.012178, "url": "https://krisha.kz/a/show/690001096"},
+    {"id": 9, "district": "Медеуский", "price": 35000000, "area": 34.4, "rooms": 1, "floor": 5, "year": 1990, "price_per_m2": 1017441.86, "log_price_per_m2": 13.832802, "url": "https://krisha.kz/a/show/690001233"},
+    {"id": 10, "district": "Медеуский", "price": 106500000, "area": 103.0, "rooms": 4, "floor": 11, "year": 2008, "price_per_m2": 1033980.58, "log_price_per_m2": 13.848927, "url": "https://krisha.kz/a/show/690001370"},
+    {"id": 11, "district": "Медеуский", "price": 33000000, "area": 32.2, "rooms": 1, "floor": 11, "year": 1989, "price_per_m2": 1024844.72, "log_price_per_m2": 13.840052, "url": "https://krisha.kz/a/show/690001507"},
+    {"id": 12, "district": "Медеуский", "price": 96000000, "area": 93.8, "rooms": 3, "floor": 8, "year": 2009, "price_per_m2": 1023454.16, "log_price_per_m2": 13.838694, "url": "https://krisha.kz/a/show/690001644"},
+    {"id": 13, "district": "Алмалинский", "price": 65500000, "area": 73.3, "rooms": 2, "floor": 11, "year": 2005, "price_per_m2": 893587.99, "log_price_per_m2": 13.703, "url": "https://krisha.kz/a/show/690001781"},
+    {"id": 14, "district": "Алмалинский", "price": 117000000, "area": 124.1, "rooms": 4, "floor": 13, "year": 2005, "price_per_m2": 942788.07, "log_price_per_m2": 13.756597, "url": "https://krisha.kz/a/show/690001918"},
+    {"id": 15, "district": "Алмалинский", "price": 54000000, "area": 55.8, "rooms": 2, "floor": 12, "year": 2005, "price_per_m2": 967741.94, "log_price_per_m2": 13.782721, "url": "https://krisha.kz/a/show/690002055"},
+    {"id": 16, "district": "Алмалинский", "price": 35000000, "area": 36.3, "rooms": 1, "floor": 8, "year": 1994, "price_per_m2": 964187.33, "log_price_per_m2": 13.779041, "url": "https://krisha.kz/a/show/690002192"},
+    {"id": 17, "district": "Алмалинский", "price": 50500000, "area": 57.0, "rooms": 2, "floor": 12, "year": 2022, "price_per_m2": 885964.91, "log_price_per_m2": 13.694433, "url": "https://krisha.kz/a/show/690002329"},
+    {"id": 18, "district": "Алмалинский", "price": 57500000, "area": 69.8, "rooms": 2, "floor": 3, "year": 2017, "price_per_m2": 823782.23, "log_price_per_m2": 13.621661, "url": "https://krisha.kz/a/show/690002466"},
+    {"id": 19, "district": "Ауэзовский", "price": 34000000, "area": 51.1, "rooms": 2, "floor": 11, "year": 1995, "price_per_m2": 665362.04, "log_price_per_m2": 13.408087, "url": "https://krisha.kz/a/show/690002603"},
+    {"id": 20, "district": "Ауэзовский", "price": 89000000, "area": 124.4, "rooms": 4, "floor": 10, "year": 2014, "price_per_m2": 715434.08, "log_price_per_m2": 13.480645, "url": "https://krisha.kz/a/show/690002740"},
+    {"id": 21, "district": "Ауэзовский", "price": 67000000, "area": 82.4, "rooms": 3, "floor": 11, "year": 1992, "price_per_m2": 813106.8, "log_price_per_m2": 13.608618, "url": "https://krisha.kz/a/show/690002877"},
+    {"id": 22, "district": "Ауэзовский", "price": 80500000, "area": 102.8, "rooms": 3, "floor": 6, "year": 1992, "price_per_m2": 783073.93, "log_price_per_m2": 13.570982, "url": "https://krisha.kz/a/show/690003014"},
+    {"id": 23, "district": "Ауэзовский", "price": 49500000, "area": 60.9, "rooms": 2, "floor": 12, "year": 2001, "price_per_m2": 812807.88, "log_price_per_m2": 13.60825, "url": "https://krisha.kz/a/show/690003151"},
+    {"id": 24, "district": "Ауэзовский", "price": 65000000, "area": 97.4, "rooms": 3, "floor": 11, "year": 2004, "price_per_m2": 667351.13, "log_price_per_m2": 13.411072, "url": "https://krisha.kz/a/show/690003288"},
+    {"id": 25, "district": "Наурызбайский", "price": 70500000, "area": 122.8, "rooms": 4, "floor": 13, "year": 1995, "price_per_m2": 574104.23, "log_price_per_m2": 13.260566, "url": "https://krisha.kz/a/show/690003425"},
+    {"id": 26, "district": "Наурызбайский", "price": 75000000, "area": 106.1, "rooms": 3, "floor": 10, "year": 2005, "price_per_m2": 706880.3, "log_price_per_m2": 13.468617, "url": "https://krisha.kz/a/show/690003562"},
+    {"id": 27, "district": "Наурызбайский", "price": 39000000, "area": 55.9, "rooms": 2, "floor": 14, "year": 2004, "price_per_m2": 697674.42, "log_price_per_m2": 13.455508, "url": "https://krisha.kz/a/show/690003699"},
+    {"id": 28, "district": "Наурызбайский", "price": 24000000, "area": 33.7, "rooms": 1, "floor": 2, "year": 2016, "price_per_m2": 712166.17, "log_price_per_m2": 13.476067, "url": "https://krisha.kz/a/show/690003836"},
+    {"id": 29, "district": "Наурызбайский", "price": 69000000, "area": 101.1, "rooms": 4, "floor": 3, "year": 2015, "price_per_m2": 682492.58, "log_price_per_m2": 13.433507, "url": "https://krisha.kz/a/show/690003973"},
+    {"id": 30, "district": "Наурызбайский", "price": 52000000, "area": 79.6, "rooms": 3, "floor": 4, "year": 2019, "price_per_m2": 653266.33, "log_price_per_m2": 13.38974, "url": "https://krisha.kz/a/show/690004110"}
+  ]
+}
