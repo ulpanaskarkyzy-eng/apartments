@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Сколько стоит квартира в Алматы — статистический анализ</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jstat@1.9.6/dist/jstat.min.js"></script>
+</head>
+<body>
+  <header class="header">
+    <div class="container header-top">
+      <div>
+        <h1>Сколько стоит квартира в Алматы?</h1>
+        <p>Интерактивное исследование рынка недвижимости · Теория вероятностей и математическая статистика</p>
+      </div>
+      <div class="header-actions">
+        <span id="dataset-badge" class="badge">Загрузка данных...</span>
+        <a href="tests/stats-test.html" class="btn-link">Проверка формул (тесты) →</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div id="error-banner" class="error-banner hidden"></div>
+
+    <div id="main-content">
+      <!-- Блок 1: Фильтры и сводная статистика -->
+      <section class="card">
+        <h2>1. Фильтры и основные показатели выборки</h2>
+        <p class="subtitle">Выберите район, число комнат, максимальный бюджет и площадь — все показатели пересчитаются мгновенно.</p>
+
+        <div class="controls-grid">
+          <div class="control-group">
+            <label for="filter-district">Район города</label>
+            <select id="filter-district">
+              <option value="all">Все районы (5)</option>
+            </select>
+          </div>
+
+          <div class="control-group">
+            <label for="filter-rooms">Количество комнат</label>
+            <select id="filter-rooms">
+              <option value="all">Любое</option>
+              <option value="1">1-комнатная</option>
+              <option value="2">2-комнатная</option>
+              <option value="3">3-комнатная</option>
+              <option value="4+">4 и более комнат</option>
+            </select>
+          </div>
+
+          <div class="control-group">
+            <label for="filter-budget">Максимальный бюджет: <span id="filter-budget-val"></span></label>
+            <input type="range" id="filter-budget" />
+          </div>
+
+          <div class="control-group">
+            <label id="filter-secondary-label" for="filter-secondary">Мин. площадь квартиры: <span id="filter-secondary-val"></span></label>
+            <input type="range" id="filter-secondary" />
+          </div>
+        </div>
+
+        <div style="margin-bottom: 16px;">
+          <button id="btn-reset-filters" class="btn btn-secondary">Сбросить фильтры</button>
+        </div>
+
+        <div class="kpi-grid">
+          <div class="kpi-box">
+            <div class="kpi-label">Объём выборки (n)</div>
+            <div class="kpi-value" id="kpi-count">—</div>
+            <div class="kpi-sub">объявлений подходит</div>
+          </div>
+          <div class="kpi-box">
+            <div class="kpi-label">Средняя цена за м² (x̄)</div>
+            <div class="kpi-value" id="kpi-mean-sqm">—</div>
+            <div class="kpi-sub">выборочное среднее</div>
+          </div>
+          <div class="kpi-box">
+            <div class="kpi-label">Стандартное отклонение (s)</div>
+            <div class="kpi-value" id="kpi-std-sqm">—</div>
+            <div class="kpi-sub">разброс цен вокруг среднего</div>
+          </div>
+          <div class="kpi-box">
+            <div class="kpi-label">Несмещённая дисперсия (s²)</div>
+            <div class="kpi-value" id="kpi-var-sqm">—</div>
+            <div class="kpi-sub">(тг/м²)²</div>
+          </div>
+          <div class="kpi-box">
+            <div class="kpi-label">Средняя полная стоимость</div>
+            <div class="kpi-value" id="kpi-mean-total">—</div>
+            <div class="kpi-sub">за всю квартиру</div>
+          </div>
+        </div>
+
+        <div class="kpi-sub" id="table-shown-info"></div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Район</th>
+                <th class="num">Цена</th>
+                <th class="num">Площадь, м²</th>
+                <th class="num">Комн.</th>
+                <th class="num">Этаж</th>
+                <th class="num">Цена/м²</th>
+                <th>Объявление</th>
+              </tr>
+            </thead>
+            <tbody id="listings-tbody"></tbody>
+          </table>
+        </div>
+
+        <details class="how-it-works">
+          <summary>Как это работает · Тема курса: Выборочные моменты и дисперсия</summary>
+          <p>По отфильтрованной выборке объёма <em>n</em> рассчитываются выборочное среднее и несмещённая выборочная дисперсия (с делителем <em>n − 1</em>, чтобы оценка не занижала истинный разброс в генеральной совокупности).</p>
+          <p>Формулы: <span class="formula-tag">x̄ = Σxᵢ / n</span> и <span class="formula-tag">s² = Σ(xᵢ − x̄)² / (n − 1)</span>, <span class="formula-tag">s = √s²</span>.</p>
+        </details>
+      </section>
+
+      <!-- Блок 2: Доверительный интервал -->
+      <section class="card">
+        <h2>2. Доверительный интервал средней цены за м²</h2>
+        <p class="subtitle">Оценка границ, в которых с заданной надёжностью находится истинная средняя цена квадратного метра.</p>
+
+        <div class="controls-grid" style="max-width: 420px;">
+          <div class="control-group">
+            <label for="ci-level">Уровень доверия (1 − α): <strong id="ci-level-val">95%</strong></label>
+            <input type="range" id="ci-level" min="90" max="99" step="1" value="95" />
+          </div>
+        </div>
+
+        <div id="ci-result-box" class="result-strip"></div>
+        <div id="chart-ci" class="chart-box"></div>
+
+        <details class="how-it-works">
+          <summary>Как это работает · Тема курса: Доверительные интервалы (распределение Стьюдента)</summary>
+          <p>Поскольку истинная дисперсия рынка неизвестна, вместо нормального квантиля используется квантиль распределения Стьюдента <em>t</em> с <em>n − 1</em> степенями свободы. Чем выше уровень доверия, тем шире интервал.</p>
+          <p>Формула: <span class="formula-tag">x̄ ± t_{1−α/2, n−1} · (s / √n)</span>.</p>
+        </details>
+      </section>
+
+      <!-- Блок 3: Дорогая или выгодная? -->
+      <section class="card">
+        <h2>3. «Дорогая или выгодная?» — оценка конкретного варианта</h2>
+        <p class="subtitle">Введите цену за квадратный метр интересующей квартиры и узнайте её положение относительно выбранной группы.</p>
+
+        <div class="controls-grid" style="max-width: 420px;">
+          <div class="control-group">
+            <label for="z-price-input">Цена интересующей квартиры за м² (тг)</label>
+            <input type="number" id="z-price-input" step="10000" min="50000" />
+          </div>
+        </div>
+
+        <div id="z-result-box" class="result-strip"></div>
+        <div id="chart-zscore" class="chart-box"></div>
+
+        <details class="how-it-works">
+          <summary>Как это работает · Тема курса: Стандартизация (Z-оценка) и эмпирический процентиль</summary>
+          <p>Z-оценка показывает, на сколько стандартных отклонений цена квартиры отклоняется от среднего по выборке. Отрицательное значение означает цену ниже средней, положительное — выше средней.</p>
+          <p>Формула: <span class="formula-tag">z = (v − x̄) / s</span>.</p>
+        </details>
+      </section>
+
+      <!-- Блок 4: Корреляции и ковариационная матрица -->
+      <section class="card">
+        <h2>4. Взаимосвязь признаков: корреляции и ковариационная матрица</h2>
+        <p class="subtitle">Как связаны между собой цена за м², общая площадь, количество комнат и этаж.</p>
+
+        <div class="two-col">
+          <div>
+            <div id="chart-corr" class="chart-box"></div>
+          </div>
+          <div>
+            <h3 style="margin-top: 8px; font-size: 1rem;">Ковариационная матрица (делитель n − 1)</h3>
+            <div id="cov-table-container" class="table-wrap"></div>
+          </div>
+        </div>
+
+        <details class="how-it-works">
+          <summary>Как это работает · Тема курса: Ковариация и корреляция Пирсона</summary>
+          <p>Ковариация измеряет совместную изменчивость двух признаков в исходных единицах измерения, а коэффициент корреляции Пирсона <em>r ∈ [−1, 1]</em> нормирует её и показывает силу линейной связи.</p>
+          <p>Формулы: <span class="formula-tag">cov(X,Y) = Σ(xᵢ−x̄)(yᵢ−ȳ) / (n−1)</span>, <span class="formula-tag">r = cov(X,Y) / (sₓ · sᵧ)</span>.</p>
+        </details>
+      </section>
+
+      <!-- Блок 5: Логнормальное распределение -->
+      <section class="card">
+        <h2>5. Распределение цен: метод моментов против ММП</h2>
+        <p class="subtitle">Сравнение двух методов параметрического оценивания логнормального распределения цены за м².</p>
+
+        <div class="controls-grid" style="max-width: 360px;">
+          <div class="control-group">
+            <label for="hist-district">Район для построения распределения</label>
+            <select id="hist-district">
+              <option value="all">Вся база (152 квартиры)</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="lognorm-stats-box" class="result-strip"></div>
+        <div id="chart-hist" class="chart-box"></div>
+
+        <details class="how-it-works">
+          <summary>Как это работает · Тема курса: Параметрические оценки (Метод моментов и ММП)</summary>
+          <p>Цены на недвижимость имеют правую асимметрию и хорошо описываются логнормальным законом. Метод моментов приравнивает выборочные среднее и дисперсию к теоретическим, а ММП (метод максимального правдоподобия) оценивает параметры по логарифмам цен.</p>
+          <p>MoM: <span class="formula-tag">σ² = ln(1 + s²/x̄²), μ = ln(x̄) − σ²/2</span> · MLE: <span class="formula-tag">μ = mean(ln xᵢ), σ² = Σ(ln xᵢ − μ)² / n</span>.</p>
+        </details>
+      </section>
+
+      <!-- Блок 6: Симулятор ЗБЧ и ЦПТ -->
+      <section class="card">
+        <h2>6. Симулятор Закона больших чисел и Центральной предельной теоремы</h2>
+        <p class="subtitle">1000 раз случайно выбираем по n квартир с возвращением и смотрим на распределение выборочных средних.</p>
+
+        <div class="controls-grid" style="max-width: 520px; align-items: end;">
+          <div class="control-group">
+            <label for="clt-n">Размер одной выборки (n): <strong id="clt-n-val">30</strong></label>
+            <input type="range" id="clt-n" min="5" max="100" step="5" value="30" />
+          </div>
+          <div class="control-group">
+            <button id="btn-clt-rerun" class="btn">Повторить 1000 выборок</button>
+          </div>
+        </div>
+
+        <div id="clt-stats-box" class="result-strip"></div>
+        <div id="chart-clt" class="chart-box"></div>
+
+        <details class="how-it-works">
+          <summary>Как это работает · Тема курса: Закон больших чисел (ЗБЧ) и Центральная предельная теорема (ЦПТ)</summary>
+          <p>По ЗБЧ при увеличении <em>n</em> выборочное среднее стягивается к истинному среднему (красная линия). По ЦПТ даже при скошенном исходном распределении цен распределение выборочных средних стремится к нормальному закону с дисперсией <em>s² / n</em>.</p>
+          <p>Формула: <span class="formula-tag">X̄ₙ ≈ N(μ, σ² / n)</span>.</p>
+        </details>
+      </section>
+
+      <!-- Блок 7: Сравнение двух районов -->
+      <section class="card">
+        <h2>7. Сравнение двух районов (доверительный интервал разности средних)</h2>
+        <p class="subtitle">Проверяем, является ли разница средних цен между двумя районами статистически значимой.</p>
+
+        <div class="controls-grid">
+          <div class="control-group">
+            <label for="diff-dist-1">Район 1</label>
+            <select id="diff-dist-1"></select>
+          </div>
+          <div class="control-group">
+            <label for="diff-dist-2">Район 2</label>
+            <select id="diff-dist-2"></select>
+          </div>
+          <div class="control-group">
+            <label for="diff-level">Уровень доверия</label>
+            <select id="diff-level">
+              <option value="90">90%</option>
+              <option value="95" selected>95%</option>
+              <option value="99">99%</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="diff-result-box" class="result-strip"></div>
+        <div id="chart-diff" class="chart-box"></div>
+
+        <details class="how-it-works">
+          <summary>Как это работает · Тема курса: Сравнение двух выборок (критерий Уэлча)</summary>
+          <p>Поскольку разброс цен в районах неодинаков, применяется приближение Уэлча для разности двух независимых средних. Если доверительный интервал не пересекает красную линию нуля, различие между районами статистически значимо.</p>
+          <p>Формула: <span class="formula-tag">(x̄ − ȳ) ± t · √(s₁²/n₁ + s₂²/n₂)</span>.</p>
+        </details>
+      </section>
+
+      <!-- Блок 8: Демо несмещённости -->
+      <section class="card">
+        <h2>8. Демонстрация несмещённости оценки дисперсии (n против n − 1)</h2>
+        <p class="subtitle">Почему в математической статистике выборочную дисперсию делят на n − 1, а не на n?</p>
+
+        <div class="controls-grid" style="max-width: 520px; align-items: end;">
+          <div class="control-group">
+            <label for="unbiased-n">Размер малой выборки (n): <strong id="unbiased-n-val">5</strong></label>
+            <input type="range" id="unbiased-n" min="3" max="25" step="1" value="5" />
+          </div>
+          <div class="control-group">
+            <button id="btn-unbiased-rerun" class="btn">Запустить 1000 малых выборок</button>
+          </div>
+        </div>
+
+        <div id="unbiased-result-box" class="result-strip"></div>
+        <div id="chart-unbiased" class="chart-box"></div>
+
+        <details class="how-it-works">
+          <summary>Как это работает · Тема курса: Несмещённость статистических оценок (поправка Бесселя)</summary>
+          <p>Отклонения от выборочного среднего всегда немного меньше отклонений от истинного среднего, поэтому деление на <em>n</em> систематически занижает дисперсию в <em>(n − 1)/n</em> раз. Деление на <em>n − 1</em> делает математическое ожидание оценки равным истинной дисперсии.</p>
+          <p>Формула: <span class="formula-tag">E[s²_{n−1}] = σ²</span>, тогда как <span class="formula-tag">E[s²_n] = ((n − 1)/n) · σ²</span>.</p>
+        </details>
+      </section>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      Учебный проект «Сколько стоит квартира в Алматы» · Алматы, 2026
+    </div>
+  </footer>
+
+  <script src="js/stats.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

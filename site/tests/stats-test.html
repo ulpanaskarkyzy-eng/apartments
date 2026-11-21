@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Автотесты формул: Python vs JavaScript</title>
+  <link rel="stylesheet" href="../css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/jstat@1.9.6/dist/jstat.min.js"></script>
+  <style>
+    .status-pass {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: #dcfce7;
+      color: #166534;
+      font-weight: 700;
+      font-size: 0.8rem;
+    }
+    .status-fail {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: #fee2e2;
+      color: #991b1b;
+      font-weight: 700;
+      font-size: 0.8rem;
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="container header-top">
+      <div>
+        <h1>Проверка формул: Python vs JavaScript</h1>
+        <p>Автоматическая сверка расчётов js/stats.js с контрольным файлом data/expected_stats.json (допуск 1e-6)</p>
+      </div>
+      <div class="header-actions">
+        <a href="../index.html" class="btn-link">← Вернуться на сайт</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div id="summary-banner" class="result-strip">Выполнение тестов...</div>
+
+    <section class="card">
+      <h2>Результаты проверки метрик</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Группа / Район</th>
+              <th>Метрика</th>
+              <th class="num">Python (expected_stats.json)</th>
+              <th class="num">JavaScript (stats.js)</th>
+              <th class="num">Отн. ошибка</th>
+              <th>Статус</th>
+            </tr>
+          </thead>
+          <tbody id="test-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="../js/stats.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", async () => {
+      const tbody = document.getElementById("test-tbody");
+      const banner = document.getElementById("summary-banner");
+      const TOL = 1e-6;
+      let total = 0;
+      let passed = 0;
+
+      function addRow(group, metric, expected, actual) {
+        total++;
+        const denom = Math.max(Math.abs(expected), 1e-12);
+        const relErr = Math.abs(expected - actual) / denom;
+        const ok = Number.isFinite(actual) && relErr <= TOL;
+        if (ok) passed++;
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><strong>${group}</strong></td>
+          <td>${metric}</td>
+          <td class="num">${Number(expected).toPrecision(10)}</td>
+          <td class="num">${Number(actual).toPrecision(10)}</td>
+          <td class="num">${relErr.toExponential(2)}</td>
+          <td><span class="${ok ? "status-pass" : "status-fail"}">${ok ? "OK" : "FAIL"}</span></td>
+        `;
+        tbody.appendChild(tr);
+      }
+
+      // 1. Проверочный пример из договора: [2, 4, 4, 4, 5, 5, 7, 9]
+      const sampleArr = [2, 4, 4, 4, 5, 5, 7, 9];
+      addRow("Проверочный пример", "mean", 5, Stats.mean(sampleArr));
+      addRow("Проверочный пример", "variance (n - 1)", 32 / 7, Stats.variance(sampleArr));
+      addRow("Проверочный пример", "varBiased (n)", 4, Stats.varBiased(sampleArr));
+
+      // 2. Загрузка listings.json и expected_stats.json
+      try {
+        const [listingsRes, expectedRes] = await Promise.all([
+          fetch("../../data/listings.json"),
+          fetch("../../data/expected_stats.json")
+        ]);
+        const listingsData = await listingsRes.json();
+        const expected = await expectedRes.json();
+        const rows = listingsData.listings;
+
+        function checkBlock(label, subset, expBlock) {
+          const ppm = subset.map((r) => r.price_per_m2);
+          const area = subset.map((r) => r.area);
+          const floor = subset.map((r) => r.floor);
+
+          addRow(label, "n", expBlock.n, ppm.length);
+          addRow(label, "mean_price_per_m2", expBlock.mean_price_per_m2, Stats.mean(ppm));
+          addRow(label, "variance_price_per_m2", expBlock.variance_price_per_m2, Stats.variance(ppm));
+          addRow(label, "std_price_per_m2", expBlock.std_price_per_m2, Stats.std(ppm));
+
+          if ("pearson_price_area" in expBlock) {
+            addRow(label, "pearson_price_area", expBlock.pearson_price_area, Stats.pearson(ppm, area));
+          }
+          if ("pearson_price_floor" in expBlock) {
+            addRow(label, "pearson_price_floor", expBlock.pearson_price_floor, Stats.pearson(ppm, floor));
+          }
+          if ("pearson_price_dist" in expBlock && subset.every((r) => typeof r.dist_univ_km === "number")) {
+            addRow(label, "pearson_price_dist", expBlock.pearson_price_dist, Stats.pearson(ppm, subset.map((r) => r.dist_univ_km)));
+          }
+
+          const ci = Stats.ciMean(ppm, 0.95);
+          addRow(label, "ci95.lower", expBlock.ci95_mean_price_per_m2.lower, ci.lower);
+          addRow(label, "ci95.upper", expBlock.ci95_mean_price_per_m2.upper, ci.upper);
+          addRow(label, "ci95.t_crit", expBlock.ci95_mean_price_per_m2.t_crit, ci.t_crit);
+
+          const mom = Stats.lognormMoM(ppm);
+          addRow(label, "lognorm_mom.mu", expBlock.lognorm_mom.mu, mom.mu);
+          addRow(label, "lognorm_mom.sigma2", expBlock.lognorm_mom.sigma2, mom.sigma2);
+
+          const mle = Stats.lognormMLE(ppm);
+          addRow(label, "lognorm_mle.mu", expBlock.lognorm_mle.mu, mle.mu);
+          addRow(label, "lognorm_mle.sigma2", expBlock.lognorm_mle.sigma2, mle.sigma2);
+        }
+
+        checkBlock("Вся база (all)", rows, expected.all);
+
+        for (const [districtName, expDist] of Object.entries(expected.by_district)) {
+          const subset = rows.filter((r) => r.district === districtName);
+          checkBlock(districtName, subset, expDist);
+        }
+
+        if (expected.cov_matrix) {
+          const jsCov = Stats.covMatrix(rows, expected.cov_matrix.features);
+          expected.cov_matrix.features.forEach((f1, i) => {
+            expected.cov_matrix.features.forEach((f2, j) => {
+              addRow("cov_matrix", `cov(${f1}, ${f2})`, expected.cov_matrix.matrix[i][j], jsCov.matrix[i][j]);
+            });
+          });
+        }
+
+        if (passed === total) {
+          banner.className = "result-strip verdict-good";
+          banner.innerHTML = `<strong>Все тесты пройдены успешно: ${passed} из ${total} совпали с Python с точностью до 1e-6!</strong>`;
+        } else {
+          banner.className = "result-strip verdict-high";
+          banner.innerHTML = `<strong>Пройдено ${passed} из ${total} тестов. Проверьте строки со статусом FAIL.</strong>`;
+        }
+      } catch (err) {
+        banner.className = "result-strip verdict-high";
+        banner.textContent = "Ошибка при загрузке JSON для тестов: " + err.message;
+      }
+    });
+  </script>
+</body>
+</html>
